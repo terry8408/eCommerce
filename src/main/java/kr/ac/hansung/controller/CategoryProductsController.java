@@ -14,6 +14,8 @@ import kr.ac.hansung.exception.NotFoundException;
 import kr.ac.hansung.service.CategoryService;
 import kr.ac.hansung.service.ProductService;
 
+import java.util.List;
+
 
 /* API Endpoint for categories and products association
  *
@@ -39,8 +41,15 @@ public class CategoryProductsController {
 
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<?> retrieveAllProducts(@PathVariable Long categoryid) {
+		// Getting all categories in application...
+		final List<Product> products = productService.getAllProducts();
 
-		
+		if (products.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+
+		return ResponseEntity.ok(products);
+		//return new ResponseEntity<List<Product>>(products, HttpStatus.OK);
 	}		
 	
 	@RequestMapping(path = "/{productid}", method = RequestMethod.POST)
@@ -70,8 +79,26 @@ public class CategoryProductsController {
 
 	@RequestMapping(path = "/{productid}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> removeProduct(@PathVariable Long categoryid, @PathVariable Long productid) {
+		// Getting the requiring category; or throwing exception if not found
+		final Category category = categoryService.getCategoryById(categoryid);
+		if (category == null)
+			throw new NotFoundException(categoryid);
 
-		
+		// Getting the requiring product; or throwing exception if not found
+		final Product product = productService.getProductById(productid);
+		if (product == null)
+			throw new NotFoundException(productid);
+
+		// Validating if association does not exist...
+		if (productService.hasCategory(product, category)) {
+			throw new IllegalArgumentException(
+					"product " + product.getId() + " already contains category " + category.getId());
+		}
+		// Deleting product from the application...
+		productService.deleteProduct(product);
+
+		return ResponseEntity.noContent().build();
+		//return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
 }
