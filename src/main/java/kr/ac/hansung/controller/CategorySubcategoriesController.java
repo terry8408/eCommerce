@@ -49,8 +49,28 @@ public class CategorySubcategoriesController {
 
     @RequestMapping(path = "/{childid}", method = RequestMethod.POST)
     public ResponseEntity<?> addSubcategory(@PathVariable Long parentid, @PathVariable Long childid) {
-    	
-       
+
+        // Getting the requiring category; or throwing exception if not found
+        final Category parent = categoryService.getCategoryById(parentid);
+        if( parent == null)
+            throw  new NotFoundException(parentid);
+
+        // Getting the requiring category; or throwing exception if not found
+        final Category child = categoryService.getCategoryById(childid);
+        if( child == null)
+            throw  new NotFoundException(childid);
+
+        // Validating if association exists...
+        if (!categoryService.isChildCategory(child, parent)) {
+            throw new IllegalArgumentException("category " + parent.getId() + " does not contain subcategory " + child.getId());
+        }
+
+        categoryService.addChildCategory(child,parent);
+
+        // Getting all categories in application...
+        final Set<Category> subcategories = parent.getChildCategories();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(subcategories);
     }
 
     @RequestMapping(path = "/{childid}", method = RequestMethod.DELETE)
