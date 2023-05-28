@@ -55,7 +55,15 @@ public class ProductController {
 	@RequestMapping(path = "/{id}", method = RequestMethod.GET)
 	public ResponseEntity<Product> retrieveProduct(@PathVariable Long id) {
 
-		
+		// Getting specific products in application...
+		final Product product = productService.getProductById(id);
+
+		if (product == null) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+
+		return new ResponseEntity<Product>(product, HttpStatus.OK);
+
 	}
 
 	// DTO(Data Transfer Object) : 계층간 데이터 교환을 위한 객체, 여기서는 클라이언트(Postman)에서 오는 데이터를 수신할 목적으로 사용
@@ -70,9 +78,18 @@ public class ProductController {
     
 	@RequestMapping(path = "/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody @Valid ProductDto request) {
-		
-		
-		
+
+		// Getting the requiring product; or throwing exception if not found
+		final Product product = productService.getProductById(id);
+
+		if(product == null)
+			throw new NotFoundException(id);
+
+		// Deleting product from the application...
+		productService.updateProduct(product);
+
+		return ResponseEntity.status(HttpStatus.OK).body(productService.getProductById(id));
+		//return ResponseEntity.noContent().build();
 	}
 
 	@RequestMapping(path = "/{id}", method = RequestMethod.DELETE)

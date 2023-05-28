@@ -79,14 +79,16 @@ public class CategoryController {
 
     @RequestMapping(path = "/{id}", method = RequestMethod.PUT)
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody @Valid CategoryDto request) {
+        // Getting the requiring category; or throwing exception if not found
+        final Category category = categoryService.getCategoryById(id);
+
+        if(category == null)
+            throw new NotFoundException(id);
 
         // Updating a category in the application...
         categoryService.updateCategory(categoryService.getCategoryById(id));
 
-        // Getting specific categories in application...
-        final Category category = categoryService.getCategoryById(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(category);
+        return ResponseEntity.status(HttpStatus.OK).body(categoryService.getCategoryById(id));
         //return new ResponseEntity<Category>(category, HttpStatus.CREATED);
     }
 
